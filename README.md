@@ -34,7 +34,7 @@ NumPy
  
 ⚙️ Installation & Setup
 1️⃣ Clone the repository
-git clone https://github.com/your-username/disaster-monitoring-system.git
+ 
 cd disaster-monitoring-system
 2️⃣ Create virtual environment
 python -m venv venv
