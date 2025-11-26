@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Management Terrain Monitor</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .video-section {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-container img {
+            width: 100%;
+            display: block;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .risk-SAFE { background: #00ff00; color: #000; }
+        .risk-LOW { background: #ffff00; color: #000; }
+        .risk-MEDIUM { background: #ffa500; color: #000; }
+        .risk-HIGH { background: #ff0000; color: #fff; }
+        .risk-CRITICAL {
+            background: #ff00ff;
+            color: #fff;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .zone-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .zone-cell {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .zone-safe {
+            background: rgba(0, 255, 0, 0.3);
+            border: 2px solid #00ff00;
+        }
+
+        .zone-unsafe {
+            background: rgba(255, 0, 0, 0.3);
+            border: 2px solid #ff0000;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        .alert-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .alert-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+
+        .alert-SAFE { border-left-color: #00ff00; }
+        .alert-LOW { border-left-color: #ffff00; }
+        .alert-MEDIUM { border-left-color: #ffa500; }
+        .alert-HIGH { border-left-color: #ff0000; }
+        .alert-CRITICAL { border-left-color: #ff00ff; }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            gap: 5px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            border-radius: 4px 4px 0 0;
+            min-width: 10px;
+            transition: all 0.3s;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: 0.3s;
+        }
+
+        .btn-primary { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .emergency-banner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff00ff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            z-index: 1000;
+            animation: blink 1s infinite;
+        }
+
+        .emergency-banner.active {
+            display: block;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="emergency-banner" id="emergencyBanner">
+        ⚠️ CRITICAL ALERT: EVACUATE AREA IMMEDIATELY! ⚠️
+    </div>
+
+    <div class="header">
+        <h1>🛡️ Disaster Management Terrain Monitor</h1>
+        <p>Real-Time Safety Assessment & Risk Analysis System</p>
+        <p style="font-size: 0.9em; opacity: 0.7;">Uptime: <span id="uptime">00:00:00</span></p>
+    </div>
+
+    <div class="container">
+
+        <!-- VIDEO SECTION -->
+        <div class="video-section">
+            <h2 style="margin-bottom: 15px;">📹 Live Terrain Feed</h2>
+
+            <div class="video-container">
+                <img src="{{ url_for('video_feed') }}" alt="Live Video Feed">
+                <div class="status-badge" id="statusBadge">ANALYZING</div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="downloadReport()">📊 Download Report</button>
+                <button class="btn btn-danger" onclick="resetSystem()">🔄 Reset System</button>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+
+            <!-- SYSTEM STATS -->
+            <div class="card">
+                <h2>📊 System Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Frames</div>
+                        <div class="stat-value" id="totalFrames">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Stability Rate</div>
+                        <div class="stat-value" id="stabilityRate">100%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Unstable Frames</div>
+                        <div class="stat-value" id="unstableFrames">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Current Risk</div>
+                        <div class="stat-value" id="currentRisk">SAFE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZONE MAP -->
+            <div class="card">
+                <h2>🗺️ Zone Safety Map</h2>
+                <div class="zone-grid" id="zoneGrid">
+                    <div class="zone-cell zone-safe">Z00</div>
+                    <div class="zone-cell zone-safe">Z01</div>
+                    <div class="zone-cell zone-safe">Z02</div>
+                    <div class="zone-cell zone-safe">Z10</div>
+                    <div class="zone-cell zone-safe">Z11</div>
+                    <div class="zone-cell zone-safe">Z12</div>
+                    <div class="zone-cell zone-safe">Z20</div>
+                    <div class="zone-cell zone-safe">Z21</div>
+                    <div class="zone-cell zone-safe">Z22</div>
+                </div>
+            </div>
+
+            <!-- CHART -->
+            <div class="card">
+                <h2>📈 Stability Trend</h2>
+                <div class="chart-container">
+                    <div class="chart-bars" id="chartBars"></div>
+                </div>
+            </div>
+
+            <!-- ALERTS -->
+            <div class="card">
+                <h2>🚨 Recent Alerts</h2>
+                <div class="alert-list" id="alertList">
+                    <p style="opacity: 0.5; text-align: center;">No alerts yet</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        let currentRiskLevel = 'SAFE';
+
+        // Fetch Updated Status
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                document.getElementById('statusBadge').textContent = data.current_risk;
+                document.getElementById('statusBadge').className = 'status-badge risk-' + data.current_risk;
+
+                document.getElementById('totalFrames').textContent = data.total_frames;
+                document.getElementById('unstableFrames').textContent = data.unstable_frames;
+                document.getElementById('stabilityRate').textContent = data.stability_rate + '%';
+                document.getElementById('currentRisk').textContent = data.current_risk;
+                document.getElementById('uptime').textContent = data.uptime;
+
+                if (data.zones) updateZones(data.zones);
+
+                const banner = document.getElementById('emergencyBanner');
+                if (data.current_risk === 'CRITICAL') banner.classList.add('active');
+                else banner.classList.remove('active');
+
+            } catch (err) { console.error('Status update failed:', err); }
+        }
+
+        // Update Zones
+        function updateZones(zones) {
+            let zoneGrid = document.getElementById('zoneGrid');
+            zoneGrid.innerHTML = '';
+
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const zoneId = `Z${r}${c}`;
+                    const zone = zones[zoneId];
+                    const cell = document.createElement('div');
+
+                    cell.className = 'zone-cell ' + (zone.status === 'SAFE' ? 'zone-safe' : 'zone-unsafe');
+                    cell.textContent = zoneId;
+
+                    zoneGrid.appendChild(cell);
+                }
+            }
+        }
+
+        // Alerts
+        async function updateAlerts() {
+            try {
+                const res = await fetch('/api/alerts');
+                const data = await res.json();
+
+                const alertList = document.getElementById('alertList');
+                if (data.all_alerts && data.all_alerts.length > 0) {
+                    alertList.innerHTML = data.all_alerts.slice(-10).reverse().map(a => `
+                        <div class="alert-item alert-${a.risk_level}">
+                            <div class="alert-time">${a.timestamp}</div>
+                            <div class="alert-message">${a.message}</div>
+                            <div class="alert-zones">Risk Score: ${a.risk_score} | Zones: ${a.affected_zones.join(', ')}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    alertList.innerHTML = '<p style="opacity: 0.5; text-align: center;">No alerts yet</p>';
+                }
+
+            } catch (err) { console.error('Alerts update failed:', err); }
+        }
+
+        // Chart
+        async function updateChart() {
+            try {
+                const response = await fetch('/api/historical');
+                const data = await response.json();
+
+                const chartBars = document.getElementById('chartBars');
+                chartBars.innerHTML = '';
+
+                const recent = data.slice(-15);
+
+                recent.forEach(point => {
+                    const height = point.stability_rate;
+                    let color = "#00ff00";
+
+                    if (height < 50) color = "#ff0000";
+                    else if (height < 80) color = "#ffff00";
+
+                    const bar = `
+                        <div class="chart-bar" 
+                             style="height:${height}%; background:linear-gradient(to top, ${color}, ${color}80)">
+                            <div class="chart-label">${point.time}</div>
+                        </div>
+                    `;
+
+                    chartBars.innerHTML += bar;
+                });
+
+            } catch (error) {
+                console.error('Chart update failed:', error);
+            }
+        }
+
+        // Reset System
+        async function resetSystem() {
+            if (confirm("Reset all monitoring data?")) {
+                try {
+                    await fetch('/api/reset');
+                    alert("System reset!");
+                    location.reload();
+                } catch (error) {
+                    alert("Reset failed: " + error.message);
+                }
+            }
+        }
+
+        // Download JSON Report
+        function downloadReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                current_risk: document.getElementById('currentRisk').textContent,
+                uptime: document.getElementById('uptime').textContent,
+                total_frames: document.getElementById('totalFrames').textContent,
+                stability_rate: document.getElementById('stabilityRate').textContent
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+
+            a.href = URL.createObjectURL(blob);
+            a.download = `terrain_report_${Date.now()}.json`;
+            a.click();
+        }
+
+        // Start Updating
+        updateStatus();
+        updateAlerts();
+        updateChart();
+
+        setInterval(updateStatus, 1000);
+        setInterval(updateAlerts, 3000);
+        setInterval(updateChart, 5000);
+    </script>
+
+</body>
+</html>
